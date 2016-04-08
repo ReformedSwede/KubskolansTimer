@@ -1,0 +1,3 @@
+C:\Users\David\SkyDrive\Programing projects\Timer\Timer\obj\x86\Release\Timer.Form1.resources
+C:\Users\David\SkyDrive\Programing projects\Timer\Timer\obj\x86\Release\Timer.Properties.Resources.resources
+C:\Users\David\SkyDrive\Programing projects\Timer\Timer\obj\x86\Release\Timer.csproj.GenerateResource.Cache

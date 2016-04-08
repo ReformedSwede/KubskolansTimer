@@ -1,0 +1,47 @@
+C:\Users\Administratör\AppData\Local\Temporary Projects\Timer\bin\Debug\Timer.exe
+C:\Users\Administratör\AppData\Local\Temporary Projects\Timer\bin\Debug\Timer.pdb
+C:\Users\Administratör\AppData\Local\Temporary Projects\Timer\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\Administratör\AppData\Local\Temporary Projects\Timer\obj\x86\Debug\Timer.Form1.resources
+C:\Users\Administratör\AppData\Local\Temporary Projects\Timer\obj\x86\Debug\Timer.Properties.Resources.resources
+C:\Users\Administratör\AppData\Local\Temporary Projects\Timer\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\Administratör\AppData\Local\Temporary Projects\Timer\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\Administratör\AppData\Local\Temporary Projects\Timer\obj\x86\Debug\Timer.exe
+C:\Users\Administratör\AppData\Local\Temporary Projects\Timer\obj\x86\Debug\Timer.pdb
+C:\Users\Administratör\Documents\Visual Studio 2010\Projects\Timer\Timer\obj\x86\Debug\Timer.exe
+C:\Users\Administratör\Documents\Visual Studio 2010\Projects\Timer\Timer\obj\x86\Debug\Timer.pdb
+C:\Users\Administratör\Documents\Visual Studio 2010\Projects\Timer\Timer\bin\Debug\Timer.exe
+C:\Users\Administratör\Documents\Visual Studio 2010\Projects\Timer\Timer\bin\Debug\Timer.pdb
+C:\Users\Administratör\Documents\Visual Studio 2010\Projects\Timer\Timer\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\Administratör\Documents\Visual Studio 2010\Projects\Timer\Timer\obj\x86\Debug\Timer.Form1.resources
+C:\Users\Administratör\Documents\Visual Studio 2010\Projects\Timer\Timer\obj\x86\Debug\Timer.Properties.Resources.resources
+C:\Users\Administratör\Documents\Visual Studio 2010\Projects\Timer\Timer\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\Administratör\Documents\Visual Studio 2010\Projects\Timer\Timer\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\David\SkyDrive\Programing projects\Timer\Timer\obj\x86\Debug\Timer.exe
+C:\Users\David\SkyDrive\Programing projects\Timer\Timer\obj\x86\Debug\Timer.pdb
+C:\Users\David\SkyDrive\Programing projects\Timer\Timer\bin\Debug\Timer.exe
+C:\Users\David\SkyDrive\Programing projects\Timer\Timer\bin\Debug\Timer.pdb
+C:\Users\David\SkyDrive\Programing projects\Timer\Timer\obj\x86\Debug\Timer.Properties.Resources.resources
+C:\Users\David\SkyDrive\Programing projects\Timer\Timer\obj\x86\Debug\Timer.csproj.GenerateResource.Cache
+C:\Users\David\SkyDrive\Programing projects\Timer\Timer\obj\x86\Debug\Timer.csprojResolveAssemblyReference.cache
+C:\Users\David\SkyDrive\Programing projects\Timer\Timer\obj\x86\Debug\Timer.Form1.resources
+C:\Users\David\SkyDrive\Programing projects\Timer\Timer\obj\x86\Debug\Timer.Form2.resources
+C:\Users\David\SkyDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.exe
+C:\Users\David\SkyDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.pdb
+C:\Users\David\SkyDrive\Programing projects c#\Timer\Timer\bin\Debug\Timer.exe
+C:\Users\David\SkyDrive\Programing projects c#\Timer\Timer\bin\Debug\Timer.pdb
+C:\Users\David\SkyDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.csprojResolveAssemblyReference.cache
+C:\Users\David\SkyDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.Form1.resources
+C:\Users\David\SkyDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.Form2.resources
+C:\Users\David\SkyDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.Properties.Resources.resources
+C:\Users\David\SkyDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.csproj.GenerateResource.Cache
+E:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.exe
+E:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.pdb
+E:\OneDrive\Programing projects c#\Timer\Timer\bin\Debug\Timer.exe
+E:\OneDrive\Programing projects c#\Timer\Timer\bin\Debug\Timer.pdb
+E:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.csprojResolveAssemblyReference.cache
+E:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.Form1.resources
+E:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.Form2.resources
+E:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.Properties.Resources.resources
+E:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.csproj.GenerateResource.Cache
+D:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.exe
+D:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.pdb
