@@ -19,13 +19,11 @@ namespace Timer
          *                                                  *
          *                                                  *     
          * ***************************************************/
-    
-        /*******************Classes******************************/        
+          
         Random rand = new Random(); // a random number generator.
         Stopwatch stopWatch = new Stopwatch(); // the timer
-        
-        /*********************Lists*******************************/
-        List<Solve> Session = new List<Solve>(); //The list that stores all information about the session (times, scrambles, penalties, stats...)
+        Session session = new Session(); //The list that stores all information about the session (times, scrambles, penalties, stats...)
+        Scrambler scrambler = new Scrambler();
 
         /*********************Numbers******************************/
         int index = -1; // Indicates what index (in the session list) the last made solve had. Is incremented when new solve is started => First solve has index 0, no solve has index -1.
@@ -41,10 +39,19 @@ namespace Timer
         bool inspect = false;
 
         /*********************Other*******************************/
-        string[] array; // This is used in the scramble generator. Each string in this array is a move in the scramble algorithm. 
         string penalty = ""; // Is used to send info about penalty from inspection to the finished Solve object
 
-    
+        //Constuctor
+        public Form1()
+        {
+            InitializeComponent();
+            buttonTimer.Focus();
+            comboBox1.SelectedIndex = 1;
+            labelScramble.Text = Scramble();
+            buttonAdd.BringToFront();
+            labelLast.Text = "Last scramble:";
+            MessageBox.Show("This application is still in beta. Please report all bugs found.");
+        }
 
         /****************************************************
          *                                                  *
@@ -52,209 +59,7 @@ namespace Timer
          *                                                  *
          *                                                  *     
          * ***************************************************/
-
-        public Form1()
-        {
-            InitializeComponent();
-            buttonTimer.Focus();
-            comboBox1.SelectedIndex = 1;
-            labelScramble.Text = scramble();
-            buttonAdd.BringToFront();
-            labelLast.Text = "Last scramble:";
-            MessageBox.Show("This application is still in beta. Please report all bugs found.");
-        }
-
-        private void displaySession()
-        {
-            // ---------------------------------------------------------------Displays all times in textbox.
-            textBox1.Text = "";
-            foreach (Solve solve in Session)
-            {
-                if (solve.penalty == "DNF")
-                    textBox1.Text += "DNF(" + solve.time + ")";
-                else
-                {
-                    if (solve.time < 60)
-                        textBox1.Text += solve.time.ToString();
-                    else
-                        textBox1.Text += secondsToMinutes(solve.time);
-
-                    if (solve.penalty == "+2")
-                        textBox1.Text += "+";
-                }
-                textBox1.Text += "   ";
-            }
-
-            // ---------------------------------------------------------------Displays number of solves. 
-            labelCount.Text = "Number of solves: " + Session.Count.ToString();
-
-            //----------------------------------------------------------------Calculates and displays total avg in seconds.
-            if (Session.Count > 0 && (Session.Count - numberOfDNFs) >= 3)
-            {
-                float totalSum = 0;
-                foreach (Solve solve in Session)
-                {
-                    if (solve.penalty == "DNF")
-                        totalSum += WorstTime;
-                    else
-                        totalSum += solve.time;
-                }
-                if (Math.Round((totalSum / Session.Count), 2) < 60)
-                    labelAvg.Text = "Session avg: " + Math.Round((totalSum / Session.Count), 2).ToString();
-                else
-                    labelAvg.Text = "Session avg: " + secondsToMinutes((float)Math.Round((totalSum / Session.Count), 2));
-            }
-            else
-                labelAvg.Text = "Session avg: DNF";
-
-            // ----------------------------------------------------------------Calculates and displays average of 5
-            float sumOf5 = 0;                                                  //sum of all 5 times
-            if (Session.Count >= 5)                                            //only works when we have more than 5 times in the session
-            {
-                int n = -1;                                                    //used in the foreach() look
-                Solve[] average5 = new Solve[5];
-                average5 = Session.GetRange(Session.Count - 5, 5).ToArray<Solve>();
-                average5 = bubbleSortSolve(average5);                               //an array with all five times, sorted in ascending order. 
-
-                foreach (Solve solve in average5)                               //Här finns en Bug! Om en tid, vilken som helst, matchar största eller minsta värdet räknas den inte med. 
-                {
-                    n++;
-                    if (n != 0 && n != 4)                                      //leave out smallest and largest times 
-                        if (solve.penalty == "DNF")
-                            sumOf5 += WorstTime;
-                        else
-                            sumOf5 += solve.time;
-                }
-
-                if (Math.Round(sumOf5 / 3, 2) < 60)                             //calculate average and print
-                    label5.Text = "Average of 5 (3): " + Math.Round(sumOf5 / 3, 2).ToString();
-                else
-                    label5.Text = "Average of 5 (3): " + secondsToMinutes((float)Math.Round(sumOf5 / 3, 2));
-            }
-            else
-                label5.Text = "Average of 5 (3): DNF";
-
-            //------------------------------------------------------------------Calculates and displays best average of 5
-            if (Session.Count >= 5)
-            {
-                if (Math.Round(sumOf5 / 3, 2) < Session[index - 1].bestFive)
-                {
-                    Session[index].bestFive = (float)Math.Round(sumOf5 / 3, 2);
-
-                    if (Math.Round(sumOf5 / 3, 2) < 60)
-                        labelB5.Text = "Best average of 5: " + Math.Round(sumOf5 / 3, 2).ToString();
-                    else
-                        labelB5.Text = "Best average of 5: " + secondsToMinutes((float)Math.Round(sumOf5 / 3, 2));
-                }
-                else
-                {
-                    Session[index].bestFive = Session[index - 1].bestFive;
-
-                    if (Math.Round(sumOf5 / 3, 2) < 60)
-                        labelB5.Text = "Best average of 5: " + Session[index].bestFive.ToString();
-                    else
-                        labelB5.Text = "Best average of 5: " + secondsToMinutes((float)Session[index].bestFive);
-                }
-            }
-            else
-                labelB5.Text = "Best average of 5: DNF";
-
-            // -----------------------------------------------------------------Calculates and displays average of 12
-            float sumOf12 = 0;
-            if (Session.Count >= 12)
-            {
-                int n = -1;
-                Solve[] average12 = new Solve[12];
-                average12 = Session.GetRange(Session.Count - 12, 12).ToArray<Solve>();
-                average12 = bubbleSortSolve(average12);
-
-                foreach (Solve solve in average12)
-                {
-                    n++;
-                    if (n != 0 && n != 11)
-                        if (solve.penalty == "DNF")
-                            sumOf12 += WorstTime;
-                        else
-                            sumOf12 += solve.time;
-                }
-                if (Math.Round(sumOf12 / 10, 2) < 60)
-                    label12.Text = "Average of 12 (10): " + Math.Round(sumOf12 / 10, 2).ToString();
-                else
-                    label12.Text = "Average of 12 (10): " + secondsToMinutes((float)Math.Round(sumOf12 / 10, 2));
-            }
-            else
-                label12.Text = "Average of 12 (10): DNF";
-
-            //------------------------------------------------------------------Calculates and displays best average of 12
-            if (Session.Count >= 12)
-            {
-                if (Math.Round(sumOf12 / 10, 2) < Session[index - 1].bestTwelve)
-                {
-                    Session[index].bestTwelve = (float)Math.Round(sumOf12 / 10, 2);
-
-                    if (Math.Round(sumOf12 / 10, 2) < 60)
-                        labelB12.Text = "Best average of 12: " + Math.Round(sumOf12 / 10, 2).ToString();
-                    else
-                        labelB12.Text = "Best average of 12: " + secondsToMinutes((float)Math.Round(sumOf12 / 10, 2));
-                }
-                else
-                {
-                    Session[index].bestTwelve = Session[index - 1].bestTwelve;
-
-                    if (Math.Round(sumOf12 / 10, 2) < 60)
-                        labelB12.Text = "Best average of 12: " + Session[index].bestTwelve.ToString();
-                    else
-                        labelB12.Text = "Best average of 12: " + secondsToMinutes(Session[index].bestTwelve);
-                }
-            }
-            else
-                labelB12.Text = "Best average of 12: DNF";
-
-            // -----------------------------------------------------------------Calculates and displays average of 100
-            float sumOf100 = 0;
-            if (Session.Count >= 100)
-            {
-                int n = -1;
-                Solve[] average100 = new Solve[100];
-                average100 = Session.GetRange(Session.Count - 100, 100).ToArray<Solve>();
-                average100 = bubbleSortSolve(average100);
-
-                foreach (Solve solve in average100)
-                {
-                    n++;
-                    if (n != 0 || n != 99)
-                        if (solve.penalty == "DNF")
-                            sumOf100 += WorstTime;
-                        else
-                            sumOf100 += solve.time;
-                }
-                if (Math.Round(sumOf100 / 98, 2) < 60)
-                    label100.Text = "Average of 100 (98): " + Math.Round(sumOf100 / 98, 2).ToString();
-                else label100.Text = "Average of 100 (98): " + secondsToMinutes((float)Math.Round(sumOf100 / 98, 2));
-            }
-            else
-                label100.Text = "Average of 100 (98): DNF";
-
-            // -----------------------------------------------------------------Displays best and worst times
-            if (Session.Count > 0 && numberOfDNFs != Session.Count)
-            {
-                if (BestTime < 60)
-                    labelBest.Text = "Best time: " + BestTime;
-                else
-                    labelBest.Text = "Best time: " + secondsToMinutes(BestTime);
-
-                if (WorstTime < 60)
-                    labelWorst.Text = "Worst time: " + WorstTime;
-                else
-                    labelWorst.Text = "Worst time: " + secondsToMinutes(WorstTime);
-            }
-            else
-            {
-                labelBest.Text = "Best time: DNF";
-                labelWorst.Text = "Worst time: DNF";
-            }
-        }
-
+         
         private void buttonTimer_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Space)
@@ -296,7 +101,7 @@ namespace Timer
                         timer1.Stop();
                         timerStart = true;
                         Solve solve = new Solve();
-                        Session.Add(solve);
+                        session.Add(solve);
                         solve.penalty = penalty;
                         penalty = "";   //reset for next solve
 
@@ -336,9 +141,9 @@ namespace Timer
                         solve.bestTime = BestTime;  //used when recalling, e.g. when clearing the last solve
                         solve.worstTime = WorstTime;
 
-                        if (Session.Count < 5)
+                        if (session.Count < 5)
                             solve.bestFive = float.MaxValue;
-                        if (Session.Count < 12)
+                        if (session.Count < 12)
                             solve.bestTwelve = float.MaxValue;
 
 
@@ -347,7 +152,7 @@ namespace Timer
 
                         solve.scramble = labelScramble.Text;
                         labelLast.Text = "Last scramble: " + solve.scramble;
-                        labelScramble.Text = scramble();
+                        labelScramble.Text = Scramble();
                         if (solve.penalty != "")
                         {
                             buttonPlus2.Enabled = false;
@@ -360,28 +165,7 @@ namespace Timer
                     }
             }
         }
-
-        private string secondsToMinutes(float seconds)
-        {
-            if (seconds < 60)
-            {
-                MessageBox.Show("Time is not higher than 60! Time sent: " + seconds);
-                return seconds.ToString();
-            }
-
-            int minutes = 0;
-            while (seconds >= 60)
-            {
-                seconds -= 60;
-                minutes++;
-            }
-
-            if (seconds >= 10)
-                return minutes.ToString() + ":" + Math.Round(seconds, 2).ToString();
-            else
-                return minutes.ToString() + ":0" + Math.Round(seconds, 2).ToString();
-        }
-
+             
         private void timer1_Tick(object sender, EventArgs e) //used during solve
         {
             if (Math.Round(stopWatch.Elapsed.TotalSeconds, 2) < 60)
@@ -418,20 +202,20 @@ namespace Timer
         {
             if (index > -1)
             {
-                if (Session[index].penalty == "DNF")
+                if (session[index].penalty == "DNF")
                     numberOfDNFs--;
 
-                Session.RemoveAt(index);    //Removes all data from last solve
+                session.Remove(index);    //Removes all data from last solve
 
                 if (index >= 1)
-                    labelLast.Text = "Last scramble: " + Session[index - 1].scramble;
+                    labelLast.Text = "Last scramble: " + session[index - 1].scramble;
                 else
                     labelLast.Text = "Last scramble: ";
 
                 if (index >= 1)
                 {
-                    BestTime = Session[index - 1].bestTime;
-                    WorstTime = Session[index - 1].worstTime;
+                    BestTime = session[index - 1].bestTime;
+                    WorstTime = session[index - 1].worstTime;
                 }
                 else
                 {
@@ -444,16 +228,16 @@ namespace Timer
                     labelTimer.Text = "0:00,00";
                 else
                 {
-                    if (Session[index].time < 60)
-                        if (Session[index].penalty != "DNF")
-                            labelTimer.Text = Session[index].time.ToString();
+                    if (session[index].time < 60)
+                        if (session[index].penalty != "DNF")
+                            labelTimer.Text = session[index].time.ToString();
                         else
-                            labelTimer.Text = "DNF (" + Session[index].time.ToString() + ")";
+                            labelTimer.Text = "DNF (" + session[index].time.ToString() + ")";
                     else
-                        if (Session[index].penalty != "DNF")
-                            labelTimer.Text = secondsToMinutes(Session[index].time);
+                        if (session[index].penalty != "DNF")
+                            labelTimer.Text = secondsToMinutes(session[index].time);
                         else
-                            labelTimer.Text = "DNF (" + secondsToMinutes(Session[index].time) + ")";
+                            labelTimer.Text = "DNF (" + secondsToMinutes(session[index].time) + ")";
                 }
 
                 displaySession();
@@ -466,7 +250,7 @@ namespace Timer
 
         private void buttonClearAll_Click(object sender, EventArgs e)
         {
-            Session.Clear();    //clears EVERYTHING!!!
+            session.Clear();    //clears EVERYTHING!!!
 
             WorstTime = float.MinValue;
             BestTime = float.MaxValue;
@@ -477,29 +261,29 @@ namespace Timer
             displaySession();
             buttonTimer.Focus();
             labelLast.Text = "Last scramble:";
-            labelScramble.Text = scramble();
+            labelScramble.Text = Scramble();
         }
 
         private void buttonReplay_Click(object sender, EventArgs e)
         {
             if (index > -1)
             {
-                labelScramble.Text = Session[index].scramble;
+                labelScramble.Text = session[index].scramble;
 
                 if (index >= 1)
-                    labelLast.Text = "Last scramble: " + Session[index - 1].scramble;
+                    labelLast.Text = "Last scramble: " + session[index - 1].scramble;
                 else
                     labelLast.Text = "Last scramble: ";
 
-                if (Session[index].penalty == "DNF")
+                if (session[index].penalty == "DNF")
                     numberOfDNFs--;
 
-                Session.RemoveAt(index); //Removes data from last solve
+                session.Remove(index); //Removes data from last solve
 
                 if (index >= 1)
                 {
-                    BestTime = Session[index - 1].bestTime;
-                    WorstTime = Session[index - 1].worstTime;
+                    BestTime = session[index - 1].bestTime;
+                    WorstTime = session[index - 1].worstTime;
                 }
                 else
                 {
@@ -508,8 +292,8 @@ namespace Timer
                 }
 
                 index--;
-                if (Session.Count > 1)
-                    labelTimer.Text = Session[index].time.ToString();
+                if (session.Count > 1)
+                    labelTimer.Text = session[index].time.ToString();
                 else
                     labelTimer.Text = "0:00,00";
                 displaySession();
@@ -524,7 +308,7 @@ namespace Timer
             if (e.KeyCode == Keys.Enter)
             {
                 Solve solve = new Solve();
-                Session.Add(solve);
+                session.Add(solve);
                 solve.penalty = "";
 
                 try
@@ -542,7 +326,7 @@ namespace Timer
 
                     solve.scramble = labelScramble.Text;
                     labelLast.Text = "Last scramble: " + solve.scramble;
-                    labelScramble.Text = scramble();
+                    labelScramble.Text = Scramble();
 
                     index++;
 
@@ -554,9 +338,9 @@ namespace Timer
                     solve.bestTime = BestTime;  //used when recalling, e.g. when clearing the last solve
                     solve.worstTime = WorstTime;
 
-                    if (Session.Count < 5)
+                    if (session.Count < 5)
                         solve.bestFive = float.MaxValue;
-                    if (Session.Count < 12)
+                    if (session.Count < 12)
                         solve.bestTwelve = float.MaxValue;
 
                     displaySession();
@@ -573,34 +357,34 @@ namespace Timer
         
         private void buttonPlus2_Click(object sender, EventArgs e)
         {
-            if (Session.Count > 0)
+            if (session.Count > 0)
             {
-                if (Session[index].time == Session[index].bestTime) //if the time that got penalty was the best...
+                if (session[index].time == session[index].bestTime) //if the time that got penalty was the best...
                 {
                     if (index >= 1)
                     {
-                        Session[index].bestTime = Session[index - 1].bestTime;
-                        BestTime = Session[index - 1].bestTime;
+                        session[index].bestTime = session[index - 1].bestTime;
+                        BestTime = session[index - 1].bestTime;
                     }
                     else
                     {
-                        Session[index].bestTime += 2;
+                        session[index].bestTime += 2;
                         BestTime += 2;
                     }
                 }
-                if (Session[index].time == Session[index].worstTime) //if the time that got penalty was the worst...
+                if (session[index].time == session[index].worstTime) //if the time that got penalty was the worst...
                 {
-                    Session[index].worstTime += 2;
+                    session[index].worstTime += 2;
                     WorstTime += 2;
                 }
 
-                Session[index].penalty = "+2";
-                Session[index].time += 2;
+                session[index].penalty = "+2";
+                session[index].time += 2;
 
-                if (Session[index].time < 60)
-                    labelTimer.Text = Session[index].time.ToString() + "+";
+                if (session[index].time < 60)
+                    labelTimer.Text = session[index].time.ToString() + "+";
                 else
-                    labelTimer.Text = secondsToMinutes(Session[index].time) + "+";
+                    labelTimer.Text = secondsToMinutes(session[index].time) + "+";
 
                 displaySession();
                 buttonPlus2.Enabled = false;
@@ -614,27 +398,27 @@ namespace Timer
 
         private void buttonDNF_Click(object sender, EventArgs e)
         {
-            if (Session.Count > 0)
+            if (session.Count > 0)
             {
-                Session[index].penalty = "DNF";
+                session[index].penalty = "DNF";
                 labelTimer.Text = "DNF";
                 numberOfDNFs++;
 
-                if (Session[index].time == WorstTime)
+                if (session[index].time == WorstTime)
                 {
                     if (index > 0)
-                        WorstTime = Session[index - 1].worstTime;
+                        WorstTime = session[index - 1].worstTime;
                     else
                         WorstTime = float.MinValue;
-                    Session[index].worstTime = WorstTime;
+                    session[index].worstTime = WorstTime;
                 }
-                if (Session[index].time == BestTime)
+                if (session[index].time == BestTime)
                 {
                     if (index > 0)
-                        BestTime = Session[index - 1].bestTime;
+                        BestTime = session[index - 1].bestTime;
                     else
                         BestTime = float.MaxValue;
-                    Session[index].bestTime = BestTime;
+                    session[index].bestTime = BestTime;
                 }
 
                 displaySession();
@@ -649,46 +433,46 @@ namespace Timer
 
         private void buttonResetPenalty_Click(object sender, EventArgs e)
         {
-            if (Session.Count > 0)
+            if (session.Count > 0)
             {
-                if (Session[index].penalty == "+2")
+                if (session[index].penalty == "+2")
                 {
-                    if (Session[index].time == BestTime)
+                    if (session[index].time == BestTime)
                     {
-                        Session[index].bestTime -= 2;
+                        session[index].bestTime -= 2;
                         BestTime -= 2;
                     }
-                    if (Session[index].time == WorstTime)
+                    if (session[index].time == WorstTime)
                     {
                         WorstTime -= 2;
-                        Session[index].worstTime -= 2;
+                        session[index].worstTime -= 2;
                     }
 
-                    Session[index].time -= 2;
+                    session[index].time -= 2;
                 }
 
-                if (Session[index].penalty == "DNF")
+                if (session[index].penalty == "DNF")
                 {
 
-                    if (Session[index].time < BestTime)
+                    if (session[index].time < BestTime)
                     {
-                        BestTime = Session[index].time;
-                        Session[index].bestTime = BestTime;
+                        BestTime = session[index].time;
+                        session[index].bestTime = BestTime;
                     }
-                    if (Session[index].time > WorstTime)
+                    if (session[index].time > WorstTime)
                     {
-                        WorstTime = Session[index].time;
-                        Session[index].worstTime = Session[index].time;
+                        WorstTime = session[index].time;
+                        session[index].worstTime = session[index].time;
                     }
                     numberOfDNFs--;
                 }
 
-                Session[index].penalty = "";
+                session[index].penalty = "";
 
-                if (Session[index].time < 60)
-                    labelTimer.Text = Session[index].time.ToString();
+                if (session[index].time < 60)
+                    labelTimer.Text = session[index].time.ToString();
                 else
-                    labelTimer.Text = secondsToMinutes(Session[index].time);
+                    labelTimer.Text = secondsToMinutes(session[index].time);
 
                 displaySession();
                 buttonPlus2.Enabled = true;
@@ -700,321 +484,197 @@ namespace Timer
             buttonTimer.Focus();
         }
 
-        /****************************************************
-         *                                                  *
-         *               Scramble functions                 *
-         *                                                  *
-         *                                                  *     
-         * ***************************************************/
-
-        private string scramble() // Returns a scramble algorithm. 
+        private void displaySession()
         {
-            try
+            // ---------------------------------------------------------------Displays all times in textbox.
+            textBox1.Text = "";
+            foreach (Solve solve in session.Solves)
             {
-                string test = comboBox1.SelectedItem.ToString(); // Checkes that the combobox shows a valid item. 
+                if (solve.penalty == "DNF")
+                    textBox1.Text += "DNF(" + solve.time + ")";
+                else
+                {
+                    if (solve.time < 60)
+                        textBox1.Text += solve.time.ToString();
+                    else
+                        textBox1.Text += secondsToMinutes(solve.time);
+
+                    if (solve.penalty == "+2")
+                        textBox1.Text += "+";
+                }
+                textBox1.Text += "   ";
             }
-            catch
+
+            // ---------------------------------------------------------------Displays number of solves. 
+            labelCount.Text = "Number of solves: " + session.Count.ToString();
+
+            //----------------------------------------------------------------Calculates and displays total avg in seconds.
+            if (session.Count > 0 && (session.Count - numberOfDNFs) >= 3)
             {
-                comboBox1.SelectedIndex = 1;
-                comboBox1.Text = "3x3";
-                buttonTimer.Focus();
-                MessageBox.Show("Combobox index error!");
-                scramble();
+                float totalSum = 0;
+                foreach (Solve solve in session.Solves)
+                {
+                    if (solve.penalty == "DNF")
+                        totalSum += WorstTime;
+                    else
+                        totalSum += solve.time;
+                }
+                if (Math.Round((totalSum / session.Count), 2) < 60)
+                    labelAvg.Text = "Session avg: " + Math.Round((totalSum / session.Count), 2).ToString();
+                else
+                    labelAvg.Text = "Session avg: " + secondsToMinutes((float)Math.Round((totalSum / session.Count), 2));
             }
+            else
+                labelAvg.Text = "Session avg: DNF";
 
-            string algorithm = ""; // This will later be given a value (text) and be returned. 
-
-            switch (comboBox1.SelectedItem.ToString())
+            // ----------------------------------------------------------------Calculates and displays average of 5
+            float sumOf5 = 0;                                                  //sum of all 5 times
+            if (session.Count >= 5)                                            //only works when we have more than 5 times in the session
             {
-                case "2x2":
-                    array = new string[11]; // Each string in this array is a move in the scramble algorithm. 
-                    count = 0;
-                    while (count < 11) // Generates 10 letters for the algorithm. 
-                    {
-                        array[count] = letterGenerator(0, 3);
-                        count++;
-                        if (count > 1)
-                        {
-                            if (array[count - 1] == array[count - 2]) // Makes sure no letter is the same as the last one. I.E. avoids "R, R2"
-                            {
-                                count--;
-                            }
-                            else if (count > 3 && array[count - 1] == array[count - 3]) // Makes sure no letter is the same as the one before the last one. Avoids "R', L2, R"
-                            {
-                                count--;
-                            }
-                        }
-                    }
-                    foreach (string letter in array)
-                    {
-                        algorithm += letter + signGenerator(0, 3);
-                    }
-                    return algorithm;
+                int n = -1;                                                    //used in the foreach() loop
+                Solve[] average5 = new Solve[5];
+                average5 = session.GetRange(session.Count - 5, 5).ToArray<Solve>();
+                average5 = bubbleSortSolve(average5);                               //an array with all five times, sorted in ascending order. 
 
-                case "3x3":
-                    array = new string[25];
-                    count = 0;
-                    while (count < 25)
-                    {
-                        array[count] = letterGenerator(0, 6);
-                        count++;
-                        if (count > 1)
-                        {
-                            if (array[count - 1] == array[count - 2])
-                            {
-                                count--;
-                            }
-                            else if (count > 2 && array[count - 1] == array[count - 3])
-                            {
-                                count--;
-                            }
-                        }
-                    }
-                    foreach (string letter in array)
-                    {
-                        algorithm += letter + signGenerator(0, 3);
-                    }
-                    return algorithm;
+                foreach (Solve solve in average5)                               //Här finns en Bug! Om en tid, vilken som helst, matchar största eller minsta värdet räknas den inte med. 
+                {
+                    n++;
+                    if (n != 0 && n != 4)                                      //leave out smallest and largest times 
+                        if (solve.penalty == "DNF")
+                            sumOf5 += WorstTime;
+                        else
+                            sumOf5 += solve.time;
+                }
 
-                case "4x4":
-                    array = new string[30];
-                    count = 0;
-                    while (count < 30)
-                    {
-                        array[count] = letterGenerator(0, 6) + wideGenerator(0, 2);
-                        count++;
-                        if (count > 1)
-                        {
-                            if (array[count - 1] == array[count - 2])
-                            {
-                                count--;
-                            }
-                            else if (count > 3 && array[count - 1] == array[count - 3]) // Makes sure no letter is the same as the one before the last one. Avoids "R', L2, R"
-                            {
-                                count--;
-                            }
-                        }
-                    }
-                    foreach (string letter in array)
-                    {
-                        algorithm += letter + signGenerator(0, 3);
-                    }
-                    return algorithm;
+                if (Math.Round(sumOf5 / 3, 2) < 60)                             //calculate average and print
+                    label5.Text = "Average of 5 (3): " + Math.Round(sumOf5 / 3, 2).ToString();
+                else
+                    label5.Text = "Average of 5 (3): " + secondsToMinutes((float)Math.Round(sumOf5 / 3, 2));
+            }
+            else
+                label5.Text = "Average of 5 (3): DNF";
 
-                case "5x5":
-                    array = new string[40];
-                    count = 0;
-                    while (count < 40)
-                    {
-                        array[count] = letterGenerator(0, 6) + wideGenerator(0, 2);
-                        count++;
-                        if (count > 1)
-                        {
-                            if (array[count - 1] == array[count - 2])
-                            {
-                                count--;
-                            }
-                            else if (count > 3 && array[count - 1] == array[count - 3]) // Makes sure no letter is the same as the one before the last one. Avoids "R', L2, R"
-                            {
-                                count--;
-                            }
-                        }
-                    }
-                    foreach (string letter in array)
-                    {
-                        algorithm += letter + signGenerator(0, 3);
-                    }
-                    return algorithm;
+            //------------------------------------------------------------------Calculates and displays best average of 5
+            if (session.Count >= 5)
+            {
+                if (Math.Round(sumOf5 / 3, 2) < session[index - 1].bestFive)
+                {
+                    session[index].bestFive = (float)Math.Round(sumOf5 / 3, 2);
 
-                case "6x6":
-                    array = new string[50];
-                    count = 0;
-                    while (count < 50)
-                    {
-                        array[count] = bigGenerator(0, 3) + letterGenerator(0, 6);
-                        count++;
-                        if (count > 1)
-                        {
-                            if (array[count - 1] == array[count - 2])
-                            {
-                                count--;
-                            }
-                            else if (count > 3 && array[count - 1] == array[count - 3]) // Makes sure no letter is the same as the one before the last one. Avoids "R', L2, R"
-                            {
-                                count--;
-                            }
-                        }
-                    }
-                    foreach (string letter in array)
-                    {
-                        algorithm += letter + signGenerator(0, 3);
-                    }
-                    return algorithm;
+                    if (Math.Round(sumOf5 / 3, 2) < 60)
+                        labelB5.Text = "Best average of 5: " + Math.Round(sumOf5 / 3, 2).ToString();
+                    else
+                        labelB5.Text = "Best average of 5: " + secondsToMinutes((float)Math.Round(sumOf5 / 3, 2));
+                }
+                else
+                {
+                    session[index].bestFive = session[index - 1].bestFive;
 
-                case "7x7":
-                    array = new string[60];
-                    count = 0;
-                    while (count < 60)
-                    {
-                        array[count] = bigGenerator(0, 3) + letterGenerator(0, 6);
-                        count++;
-                        if (count > 1)
-                        {
-                            if (array[count - 1] == array[count - 2])
-                            {
-                                count--;
-                            }
-                            else if (count > 3 && array[count - 1] == array[count - 3]) // Makes sure no letter is the same as the one before the last one. Avoids "R', L2, R"
-                            {
-                                count--;
-                            }
-                        }
-                    }
-                    foreach (string letter in array)
-                    {
-                        algorithm += letter + signGenerator(0, 3);
-                    }
-                    return algorithm;
+                    if (Math.Round(sumOf5 / 3, 2) < 60)
+                        labelB5.Text = "Best average of 5: " + session[index].bestFive.ToString();
+                    else
+                        labelB5.Text = "Best average of 5: " + secondsToMinutes((float)session[index].bestFive);
+                }
+            }
+            else
+                labelB5.Text = "Best average of 5: DNF";
 
-                case "Pyraminx":
-                    array = new string[10];
-                    count = 0;
-                    while (count < 10)
-                    {
-                        array[count] = letterGenerator(1, 5);
-                        count++;
-                        if (count > 1)
-                        {
-                            if (array[count - 1] == array[count - 2])
-                            {
-                                count--;
-                            }
-                        }
-                    }
-                    foreach (string letter in array)
-                    {
-                        algorithm += letter + signGenerator(0, 2);
-                    }
-                    array = new string[4];
-                    count = 0;
-                    while (count < 4)
-                    {
-                        array[count] = signGenerator(0, 3);
-                        switch (count)
-                        {
-                            case 0:
-                                if (array[count] == "2 ")
-                                    algorithm += "";
-                                else
-                                    algorithm += "u" + array[count];
-                                break;
-                            case 1:
-                                if (array[count] == "2 ")
-                                    algorithm += "";
-                                else
-                                    algorithm += "r" + array[count];
-                                break;
-                            case 2:
-                                if (array[count] == "2 ")
-                                    algorithm += "";
-                                else
-                                    algorithm += "l" + array[count];
-                                break;
-                            case 3:
-                                if (array[count] == "2 ")
-                                    algorithm += "";
-                                else
-                                    algorithm += "b" + array[count];
-                                break;
-                        }
-                        count++;
-                    }
+            // -----------------------------------------------------------------Calculates and displays average of 12
+            float sumOf12 = 0;
+            if (session.Count >= 12)
+            {
+                int n = -1;
+                Solve[] average12 = new Solve[12];
+                average12 = session.GetRange(session.Count - 12, 12).ToArray<Solve>();
+                average12 = bubbleSortSolve(average12);
 
-                    return algorithm;
+                foreach (Solve solve in average12)
+                {
+                    n++;
+                    if (n != 0 && n != 11)
+                        if (solve.penalty == "DNF")
+                            sumOf12 += WorstTime;
+                        else
+                            sumOf12 += solve.time;
+                }
+                if (Math.Round(sumOf12 / 10, 2) < 60)
+                    label12.Text = "Average of 12 (10): " + Math.Round(sumOf12 / 10, 2).ToString();
+                else
+                    label12.Text = "Average of 12 (10): " + secondsToMinutes((float)Math.Round(sumOf12 / 10, 2));
+            }
+            else
+                label12.Text = "Average of 12 (10): DNF";
 
-                case "Megaminx":
+            //------------------------------------------------------------------Calculates and displays best average of 12
+            if (session.Count >= 12)
+            {
+                if (Math.Round(sumOf12 / 10, 2) < session[index - 1].bestTwelve)
+                {
+                    session[index].bestTwelve = (float)Math.Round(sumOf12 / 10, 2);
 
-                case "Square-1":
+                    if (Math.Round(sumOf12 / 10, 2) < 60)
+                        labelB12.Text = "Best average of 12: " + Math.Round(sumOf12 / 10, 2).ToString();
+                    else
+                        labelB12.Text = "Best average of 12: " + secondsToMinutes((float)Math.Round(sumOf12 / 10, 2));
+                }
+                else
+                {
+                    session[index].bestTwelve = session[index - 1].bestTwelve;
 
-                default:
-                    return "";
+                    if (Math.Round(sumOf12 / 10, 2) < 60)
+                        labelB12.Text = "Best average of 12: " + session[index].bestTwelve.ToString();
+                    else
+                        labelB12.Text = "Best average of 12: " + secondsToMinutes(session[index].bestTwelve);
+                }
+            }
+            else
+                labelB12.Text = "Best average of 12: DNF";
+
+            // -----------------------------------------------------------------Calculates and displays average of 100
+            float sumOf100 = 0;
+            if (session.Count >= 100)
+            {
+                int n = -1;
+                Solve[] average100 = new Solve[100];
+                average100 = session.GetRange(session.Count - 100, 100).ToArray<Solve>();
+                average100 = bubbleSortSolve(average100);
+
+                foreach (Solve solve in average100)
+                {
+                    n++;
+                    if (n != 0 || n != 99)
+                        if (solve.penalty == "DNF")
+                            sumOf100 += WorstTime;
+                        else
+                            sumOf100 += solve.time;
+                }
+                if (Math.Round(sumOf100 / 98, 2) < 60)
+                    label100.Text = "Average of 100 (98): " + Math.Round(sumOf100 / 98, 2).ToString();
+                else label100.Text = "Average of 100 (98): " + secondsToMinutes((float)Math.Round(sumOf100 / 98, 2));
+            }
+            else
+                label100.Text = "Average of 100 (98): DNF";
+
+            // -----------------------------------------------------------------Displays best and worst times
+            if (session.Count > 0 && numberOfDNFs != session.Count)
+            {
+                if (BestTime < 60)
+                    labelBest.Text = "Best time: " + BestTime;
+                else
+                    labelBest.Text = "Best time: " + secondsToMinutes(BestTime);
+
+                if (WorstTime < 60)
+                    labelWorst.Text = "Worst time: " + WorstTime;
+                else
+                    labelWorst.Text = "Worst time: " + secondsToMinutes(WorstTime);
+            }
+            else
+            {
+                labelBest.Text = "Best time: DNF";
+                labelWorst.Text = "Worst time: DNF";
             }
         }
 
-        private string letterGenerator(int min, int max) // Is used for generating a random letter.
-        {
-            int letter = rand.Next(min, max);
-
-            switch (letter)
-            {
-                case 0:
-                    return "F";
-                case 1:
-                    return "R";
-                case 2:
-                    return "U";
-                case 3:
-                    return "B";
-                case 4:
-                    return "L";
-                case 5:
-                    return "D";
-                default:
-                    return "";
-            }
-        }
-
-        private string signGenerator(int min, int max) // Is used for generating a random sign.
-        {
-            int sign = rand.Next(min, max);
-
-            switch (sign)
-            {
-                case 0:
-                    return " ";
-                case 1:
-                    return "' ";
-                case 2:
-                    return "2 ";
-                default:
-                    return "";
-            }
-        }
-
-        private string wideGenerator(int min, int max) // Is used to generate "w" in 4x4 scramble. 
-        {
-            int wide = rand.Next(min, max);
-            switch (wide)
-            {
-                case 0:
-                    return "";
-                case 1:
-                    return "w";
-                default:
-                    return "";
-            }
-        }
-
-        private string bigGenerator(int min, int max)// Is used for generating scrambles for puzzles >= 6x6
-        {
-            int big = rand.Next(min, max);
-            switch (big)
-            {
-                case 0:
-                    return "";
-                case 1:
-                    return "2";
-                case 2:
-                    return "3";
-                case 3:
-                    return "4";
-                case 4:
-                    return "5";
-                default:
-                    return "";
-            }
-        }
-        
         /****************************************************
          *                                                  *
          *              Interface functions                 *
@@ -1025,7 +685,7 @@ namespace Timer
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             labelLast.Text = "Last scramble: " + labelScramble.Text;
-            labelScramble.Text = scramble();
+            labelScramble.Text = Scramble();
             buttonTimer.Focus();
         }
 
@@ -1036,7 +696,7 @@ namespace Timer
 
         private void copyLastScrambleToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Clipboard.SetText(Session[index].scramble);
+            Clipboard.SetText(session[index].scramble);
         }
 
         private void copySessionAvgToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1046,7 +706,7 @@ namespace Timer
 
         private void button1_Click(object sender, EventArgs e)
         {
-            labelScramble.Text = scramble();
+            labelScramble.Text = Scramble();
             buttonTimer.Focus();
         }    
       
@@ -1075,8 +735,6 @@ namespace Timer
                 textBoxAdd1.Text = "";
                 textBoxAdd2.Text = "";
             }
-
-
         }
 
         private void checkBoxInspect_CheckedChanged(object sender, EventArgs e)
@@ -1102,10 +760,31 @@ namespace Timer
 
         /****************************************************
         *                                                  *
-        *              Miscellaneous functions             *
+        *              Utility functions                   *
         *                                                  *
         *                                                  *     
         * ***************************************************/
+
+        private string secondsToMinutes(float seconds)
+        {
+            if (seconds < 60)
+            {
+                MessageBox.Show("Time is not higher than 60! Time sent: " + seconds);
+                return seconds.ToString();
+            }
+
+            int minutes = 0;
+            while (seconds >= 60)
+            {
+                seconds -= 60;
+                minutes++;
+            }
+
+            if (seconds >= 10)
+                return minutes.ToString() + ":" + Math.Round(seconds, 2).ToString();
+            else
+                return minutes.ToString() + ":0" + Math.Round(seconds, 2).ToString();
+        }
 
         private float[] bubbleSort(float[] array)
         {
@@ -1151,6 +830,18 @@ namespace Timer
                 }
             }
             return array;
+        }
+
+        private string Scramble()
+        {
+            string puzzleType = comboBox1.SelectedItem?.ToString();
+            if(puzzleType == null)
+            {
+                comboBox1.SelectedIndex = 1;
+                comboBox1.Text = puzzleType = "3x3";
+                buttonTimer.Focus();  
+            }
+            return scrambler.Scramble(puzzleType);
         }
     }
 }

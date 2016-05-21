@@ -45,3 +45,12 @@ E:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.Properties.Re
 E:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.csproj.GenerateResource.Cache
 D:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.exe
 D:\OneDrive\Programing projects c#\Timer\Timer\obj\x86\Debug\Timer.pdb
+D:\GitHub\KubskolansTimer\Timer\Timer\obj\x86\Debug\Timer.exe
+D:\GitHub\KubskolansTimer\Timer\Timer\obj\x86\Debug\Timer.pdb
+D:\GitHub\KubskolansTimer\Timer\Timer\bin\Debug\Timer.exe
+D:\GitHub\KubskolansTimer\Timer\Timer\bin\Debug\Timer.pdb
+D:\GitHub\KubskolansTimer\Timer\Timer\obj\x86\Debug\Timer.csprojResolveAssemblyReference.cache
+D:\GitHub\KubskolansTimer\Timer\Timer\obj\x86\Debug\Timer.Form1.resources
+D:\GitHub\KubskolansTimer\Timer\Timer\obj\x86\Debug\Timer.Form2.resources
+D:\GitHub\KubskolansTimer\Timer\Timer\obj\x86\Debug\Timer.Properties.Resources.resources
+D:\GitHub\KubskolansTimer\Timer\Timer\obj\x86\Debug\Timer.csproj.GenerateResource.Cache
