@@ -5,12 +5,24 @@ using System.Text;
 
 namespace Timer
 {
-    class Solve
+    public class Solve
     {
         /// <summary>
         /// The time of the solve, i.e. how long time it took to solve the cube.
         /// </summary>
-        public float time = 0;
+        private float time = 0;
+        
+        public float Time
+        {
+            get
+            {
+               return (float)Math.Round((double)time, 2); //this is very ugly. Has to be fixed. If rounding is removed, bad stuff happens when '+2' is clicked
+            }
+            set
+            {
+                time = value;
+            }
+        }
 
         /// <summary>
         /// The scramble algorithm used in the solve.

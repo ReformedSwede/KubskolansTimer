@@ -1,0 +1,8 @@
+D:\GitHub\KubskolansTimer\Timer\TimerTests\bin\Debug\TimerTests.dll
+D:\GitHub\KubskolansTimer\Timer\TimerTests\bin\Debug\TimerTests.pdb
+D:\GitHub\KubskolansTimer\Timer\TimerTests\bin\Debug\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
+D:\GitHub\KubskolansTimer\Timer\TimerTests\bin\Debug\Timer.exe
+D:\GitHub\KubskolansTimer\Timer\TimerTests\bin\Debug\Timer.pdb
+D:\GitHub\KubskolansTimer\Timer\TimerTests\obj\Debug\TimerTests.csprojResolveAssemblyReference.cache
+D:\GitHub\KubskolansTimer\Timer\TimerTests\obj\Debug\TimerTests.dll
+D:\GitHub\KubskolansTimer\Timer\TimerTests\obj\Debug\TimerTests.pdb

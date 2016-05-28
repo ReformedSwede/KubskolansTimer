@@ -26,12 +26,9 @@ namespace Timer
         Scrambler scrambler = new Scrambler();
 
         /*********************Numbers******************************/
-        int index = -1; // Indicates what index (in the session list) the last made solve had. Is incremented when new solve is started => First solve has index 0, no solve has index -1.
-        int count = 0; // This is used in the scramble generator. Makes sure the scramble is at the appropriate length. 
+        //int index = -1; // Indicates what index (in the session list) the last made solve had. Is incremented when new solve is started => First solve has index 0, no solve has index -1.
         int numberOfDNFs = 0;
         decimal inspectiontime = 15;
-        float WorstTime = float.MinValue;   //The current best and worst times. Since this info is also in the class, it might be possible to remove these...
-        float BestTime = float.MaxValue;    //... ,change some things and still have it work.
 
         /*********************Booleans***************************/
         bool timerStart = true; // Determines wether spacebar starts or stops timer
@@ -88,7 +85,7 @@ namespace Timer
                         buttonTimer.BackColor = Color.Red;
                         labelTimer.BackColor = Color.Red;
                         timerStart = false;
-                        index++;
+                        //index++;
                         stopWatch.Reset();
 
                         timer1.Start();
@@ -101,68 +98,59 @@ namespace Timer
                         timer1.Stop();
                         timerStart = true;
                         Solve solve = new Solve();
-                        session.Add(solve);
                         solve.penalty = penalty;
                         penalty = "";   //reset for next solve
 
                         switch (solve.penalty) // adds the time to the session list & displays it, all according to the penalty. 
                         {
                             case "":
-                                solve.time = (float)Math.Round(stopWatch.Elapsed.TotalSeconds, 2);
+                                solve.Time = (float)Math.Round(stopWatch.Elapsed.TotalSeconds, 2);
 
-                                if (solve.time < 60) // Switches between displaying 0,00 and 0:00,00
-                                    labelTimer.Text = solve.time.ToString();
+                                if (solve.Time < 60) // Switches between displaying 0,00 and 0:00,00
+                                    labelTimer.Text = solve.Time.ToString();
                                 else
-                                    labelTimer.Text = secondsToMinutes(solve.time);
+                                    labelTimer.Text = secondsToMinutes(solve.Time);
                                 break;
 
                             case "+2":
-                                solve.time = (float)Math.Round(stopWatch.Elapsed.TotalSeconds + 2, 2);
+                                solve.Time = (float)Math.Round(stopWatch.Elapsed.TotalSeconds + 2, 2);
 
-                                if (solve.time < 60)
-                                    labelTimer.Text = solve.time.ToString() + "+";
+                                if (solve.Time < 60)
+                                    labelTimer.Text = solve.Time.ToString() + "+";
                                 else
-                                    labelTimer.Text = secondsToMinutes(solve.time) + "+";
+                                    labelTimer.Text = secondsToMinutes(solve.Time) + "+";
                                 break;
 
                             case "DNF":
-                                solve.time = (float)Math.Round(stopWatch.Elapsed.TotalSeconds, 2);
+                                solve.Time = (float)Math.Round(stopWatch.Elapsed.TotalSeconds, 2);
 
                                 labelTimer.Text = "DNF";
                                 break;
-                        }
-
-
-                        if (solve.time < BestTime)
-                            BestTime = solve.time;
-                        if (solve.time > WorstTime)
-                            WorstTime = solve.time;
-
-                        solve.bestTime = BestTime;  //used when recalling, e.g. when clearing the last solve
-                        solve.worstTime = WorstTime;
-
-                        if (session.Count < 5)
-                            solve.bestFive = float.MaxValue;
-                        if (session.Count < 12)
-                            solve.bestTwelve = float.MaxValue;
-
-
-                        buttonTimer.BackColor = Color.WhiteSmoke;
-                        labelTimer.BackColor = Color.WhiteSmoke;
-
-                        solve.scramble = labelScramble.Text;
-                        labelLast.Text = "Last scramble: " + solve.scramble;
-                        labelScramble.Text = Scramble();
-                        if (solve.penalty != "")
-                        {
-                            buttonPlus2.Enabled = false;
-                            buttonDNF.Enabled = false;
-                        }
-
-                        displaySession();
-                        if (checkBoxInspect.Checked) // bool inspect has to be restored. 
-                            inspect = true;
                     }
+                    session.Add(solve);
+
+                    if (session.Count < 5)
+                        solve.bestFive = float.MaxValue;
+                    if (session.Count < 12)
+                        solve.bestTwelve = float.MaxValue;
+
+
+                    buttonTimer.BackColor = Color.WhiteSmoke;
+                    labelTimer.BackColor = Color.WhiteSmoke;
+
+                    solve.scramble = labelScramble.Text;
+                    labelLast.Text = "Last scramble: " + solve.scramble;
+                    labelScramble.Text = Scramble();
+                    if (solve.penalty != "")
+                    {
+                        buttonPlus2.Enabled = false;
+                        buttonDNF.Enabled = false;
+                    }
+
+                    displaySession();
+                    if (checkBoxInspect.Checked) // bool inspect has to be restored. 
+                        inspect = true;
+                }
             }
         }
              
@@ -199,45 +187,33 @@ namespace Timer
         }
 
         private void buttonClearLast_Click(object sender, EventArgs e)
-        {
-            if (index > -1)
+        {          
+            if (session.hasSolves()) 
             {
-                if (session[index].penalty == "DNF")
+                if (session.getLastSolve().penalty == "DNF")
                     numberOfDNFs--;
 
-                session.Remove(index);    //Removes all data from last solve
+                session.RemoveLast();    //Removes all data from last solve
 
-                if (index >= 1)
-                    labelLast.Text = "Last scramble: " + session[index - 1].scramble;
+                if (session.hasSolves())
+                    labelLast.Text = "Last scramble: " + session.getLastSolve().scramble;
                 else
                     labelLast.Text = "Last scramble: ";
-
-                if (index >= 1)
-                {
-                    BestTime = session[index - 1].bestTime;
-                    WorstTime = session[index - 1].worstTime;
-                }
-                else
-                {
-                    BestTime = float.MaxValue;
-                    WorstTime = float.MinValue;
-                }
-
-                index--;
-                if (index == -1)
+                
+                if (!session.hasSolves())
                     labelTimer.Text = "0:00,00";
                 else
                 {
-                    if (session[index].time < 60)
-                        if (session[index].penalty != "DNF")
-                            labelTimer.Text = session[index].time.ToString();
+                    if (session.getLastSolve().Time < 60)
+                        if (session.getLastSolve().penalty != "DNF")
+                            labelTimer.Text = session.getLastSolve().Time.ToString();
                         else
-                            labelTimer.Text = "DNF (" + session[index].time.ToString() + ")";
+                            labelTimer.Text = "DNF (" + session.getLastSolve().Time.ToString() + ")";
                     else
-                        if (session[index].penalty != "DNF")
-                            labelTimer.Text = secondsToMinutes(session[index].time);
+                        if (session.getLastSolve().penalty != "DNF")
+                            labelTimer.Text = secondsToMinutes(session.getLastSolve().Time);
                         else
-                            labelTimer.Text = "DNF (" + secondsToMinutes(session[index].time) + ")";
+                            labelTimer.Text = "DNF (" + secondsToMinutes(session.getLastSolve().Time) + ")";
                 }
 
                 displaySession();
@@ -250,13 +226,9 @@ namespace Timer
 
         private void buttonClearAll_Click(object sender, EventArgs e)
         {
-            session.Clear();    //clears EVERYTHING!!!
-
-            WorstTime = float.MinValue;
-            BestTime = float.MaxValue;
+            session.Clear();    //clears EVERYTHING!!!            
             numberOfDNFs = 0;
-
-            index = -1;
+            
             labelTimer.Text = "0:00,00";
             displaySession();
             buttonTimer.Focus();
@@ -266,34 +238,22 @@ namespace Timer
 
         private void buttonReplay_Click(object sender, EventArgs e)
         {
-            if (index > -1)
+            if (session.hasSolves())
             {
-                labelScramble.Text = session[index].scramble;
+                labelScramble.Text = session.getLastSolve().scramble;
 
-                if (index >= 1)
-                    labelLast.Text = "Last scramble: " + session[index - 1].scramble;
+                if (session.Count > 1)
+                    labelLast.Text = "Last scramble: " + session[session.Count - 2].scramble;
                 else
                     labelLast.Text = "Last scramble: ";
 
-                if (session[index].penalty == "DNF")
+                if (session.getLastSolve().penalty == "DNF")
                     numberOfDNFs--;
 
-                session.Remove(index); //Removes data from last solve
-
-                if (index >= 1)
-                {
-                    BestTime = session[index - 1].bestTime;
-                    WorstTime = session[index - 1].worstTime;
-                }
-                else
-                {
-                    BestTime = float.MaxValue;
-                    WorstTime = float.MinValue;
-                }
-
-                index--;
+                session.RemoveLast(); //Removes data from last solve
+                
                 if (session.Count > 1)
-                    labelTimer.Text = session[index].time.ToString();
+                    labelTimer.Text = session.getLastSolve().Time.ToString();
                 else
                     labelTimer.Text = "0:00,00";
                 displaySession();
@@ -308,36 +268,26 @@ namespace Timer
             if (e.KeyCode == Keys.Enter)
             {
                 Solve solve = new Solve();
-                session.Add(solve);
                 solve.penalty = "";
 
                 try
                 {
                     if (textBoxAdd1.Text == "") // if no minutes
                     {
-                        solve.time = float.Parse(textBoxAdd2.Text);
-                        labelTimer.Text = Math.Round(solve.time, 2).ToString();
+                        solve.Time = float.Parse(textBoxAdd2.Text);
+                        labelTimer.Text = Math.Round(solve.Time, 2).ToString();
                     }
                     else                        //if minutes
                     {
-                        solve.time = int.Parse(textBoxAdd1.Text) * 60 + float.Parse(textBoxAdd2.Text);
-                        labelTimer.Text = secondsToMinutes(solve.time);
+                        solve.Time = int.Parse(textBoxAdd1.Text) * 60 + float.Parse(textBoxAdd2.Text);
+                        labelTimer.Text = secondsToMinutes(solve.Time);
                     }
+                    session.Add(solve);
 
                     solve.scramble = labelScramble.Text;
                     labelLast.Text = "Last scramble: " + solve.scramble;
                     labelScramble.Text = Scramble();
-
-                    index++;
-
-                    if (solve.time < BestTime)
-                        BestTime = solve.time;
-                    if (solve.time > WorstTime)
-                        WorstTime = solve.time;
-
-                    solve.bestTime = BestTime;  //used when recalling, e.g. when clearing the last solve
-                    solve.worstTime = WorstTime;
-
+                    
                     if (session.Count < 5)
                         solve.bestFive = float.MaxValue;
                     if (session.Count < 12)
@@ -359,32 +309,21 @@ namespace Timer
         {
             if (session.Count > 0)
             {
-                if (session[index].time == session[index].bestTime) //if the time that got penalty was the best...
-                {
-                    if (index >= 1)
-                    {
-                        session[index].bestTime = session[index - 1].bestTime;
-                        BestTime = session[index - 1].bestTime;
-                    }
-                    else
-                    {
-                        session[index].bestTime += 2;
-                        BestTime += 2;
-                    }
-                }
-                if (session[index].time == session[index].worstTime) //if the time that got penalty was the worst...
-                {
-                    session[index].worstTime += 2;
-                    WorstTime += 2;
-                }
+                session.getLastSolve().penalty = "+2";
 
-                session[index].penalty = "+2";
-                session[index].time += 2;
-
-                if (session[index].time < 60)
-                    labelTimer.Text = session[index].time.ToString() + "+";
+                if (session.getLastSolve().Time == session.BestTime //if the time that got penalty was the best or worst...
+                 || session.getLastSolve().Time == session.WorstTime)
+                {
+                    session.getLastSolve().Time += 2;
+                    session.RecalculateBestAndWorstTimes();
+                }
                 else
-                    labelTimer.Text = secondsToMinutes(session[index].time) + "+";
+                    session.getLastSolve().Time += 2;
+
+                if (session.getLastSolve().Time < 60)
+                    labelTimer.Text = session.getLastSolve().Time.ToString() + "+";
+                else
+                    labelTimer.Text = secondsToMinutes(session.getLastSolve().Time) + "+";
 
                 displaySession();
                 buttonPlus2.Enabled = false;
@@ -400,26 +339,13 @@ namespace Timer
         {
             if (session.Count > 0)
             {
-                session[index].penalty = "DNF";
+                session.getLastSolve().penalty = "DNF";
                 labelTimer.Text = "DNF";
                 numberOfDNFs++;
 
-                if (session[index].time == WorstTime)
-                {
-                    if (index > 0)
-                        WorstTime = session[index - 1].worstTime;
-                    else
-                        WorstTime = float.MinValue;
-                    session[index].worstTime = WorstTime;
-                }
-                if (session[index].time == BestTime)
-                {
-                    if (index > 0)
-                        BestTime = session[index - 1].bestTime;
-                    else
-                        BestTime = float.MaxValue;
-                    session[index].bestTime = BestTime;
-                }
+                if (session.getLastSolve().Time == session.WorstTime 
+                 || session.getLastSolve().Time == session.BestTime)
+                    session.RecalculateBestAndWorstTimesWithoutLastSolve();
 
                 displaySession();
                 buttonPlus2.Enabled = false;
@@ -435,44 +361,34 @@ namespace Timer
         {
             if (session.Count > 0)
             {
-                if (session[index].penalty == "+2")
+                if (session.getLastSolve().penalty == "+2")
                 {
-                    if (session[index].time == BestTime)
+                    if (session.getLastSolve().Time == session.BestTime
+                     || session.getLastSolve().Time == session.WorstTime)
                     {
-                        session[index].bestTime -= 2;
-                        BestTime -= 2;
+                        session.getLastSolve().Time -= 2;
+                        session.RecalculateBestAndWorstTimes();
                     }
-                    if (session[index].time == WorstTime)
-                    {
-                        WorstTime -= 2;
-                        session[index].worstTime -= 2;
-                    }
+                    else
+                        session.getLastSolve().Time -= 2;
 
-                    session[index].time -= 2;
+                    session.getLastSolve().penalty = "";
                 }
 
-                if (session[index].penalty == "DNF")
+                if (session.getLastSolve().penalty == "DNF")
                 {
-
-                    if (session[index].time < BestTime)
-                    {
-                        BestTime = session[index].time;
-                        session[index].bestTime = BestTime;
-                    }
-                    if (session[index].time > WorstTime)
-                    {
-                        WorstTime = session[index].time;
-                        session[index].worstTime = session[index].time;
-                    }
+                    session.getLastSolve().penalty = "";
+                    if (session.getLastSolve().Time < session.BestTime
+                        || session.getLastSolve().Time > session.WorstTime)
+                        session.RecalculateBestAndWorstTimes();
                     numberOfDNFs--;
                 }
 
-                session[index].penalty = "";
 
-                if (session[index].time < 60)
-                    labelTimer.Text = session[index].time.ToString();
+                if (session.getLastSolve().Time < 60)
+                    labelTimer.Text = session.getLastSolve().Time.ToString();
                 else
-                    labelTimer.Text = secondsToMinutes(session[index].time);
+                    labelTimer.Text = secondsToMinutes(session.getLastSolve().Time);
 
                 displaySession();
                 buttonPlus2.Enabled = true;
@@ -491,13 +407,13 @@ namespace Timer
             foreach (Solve solve in session.Solves)
             {
                 if (solve.penalty == "DNF")
-                    textBox1.Text += "DNF(" + solve.time + ")";
+                    textBox1.Text += "DNF(" + solve.Time + ")";
                 else
                 {
-                    if (solve.time < 60)
-                        textBox1.Text += solve.time.ToString();
+                    if (solve.Time < 60)
+                        textBox1.Text += solve.Time.ToString();
                     else
-                        textBox1.Text += secondsToMinutes(solve.time);
+                        textBox1.Text += secondsToMinutes(solve.Time);
 
                     if (solve.penalty == "+2")
                         textBox1.Text += "+";
@@ -515,9 +431,9 @@ namespace Timer
                 foreach (Solve solve in session.Solves)
                 {
                     if (solve.penalty == "DNF")
-                        totalSum += WorstTime;
+                        totalSum += session.WorstTime;
                     else
-                        totalSum += solve.time;
+                        totalSum += solve.Time;
                 }
                 if (Math.Round((totalSum / session.Count), 2) < 60)
                     labelAvg.Text = "Session avg: " + Math.Round((totalSum / session.Count), 2).ToString();
@@ -541,9 +457,9 @@ namespace Timer
                     n++;
                     if (n != 0 && n != 4)                                      //leave out smallest and largest times 
                         if (solve.penalty == "DNF")
-                            sumOf5 += WorstTime;
+                            sumOf5 += session.WorstTime;
                         else
-                            sumOf5 += solve.time;
+                            sumOf5 += solve.Time;
                 }
 
                 if (Math.Round(sumOf5 / 3, 2) < 60)                             //calculate average and print
@@ -557,9 +473,9 @@ namespace Timer
             //------------------------------------------------------------------Calculates and displays best average of 5
             if (session.Count >= 5)
             {
-                if (Math.Round(sumOf5 / 3, 2) < session[index - 1].bestFive)
+                if (Math.Round(sumOf5 / 3, 2) < session[session.Count - 2].bestFive)
                 {
-                    session[index].bestFive = (float)Math.Round(sumOf5 / 3, 2);
+                    session.getLastSolve().bestFive = (float)Math.Round(sumOf5 / 3, 2);
 
                     if (Math.Round(sumOf5 / 3, 2) < 60)
                         labelB5.Text = "Best average of 5: " + Math.Round(sumOf5 / 3, 2).ToString();
@@ -568,12 +484,12 @@ namespace Timer
                 }
                 else
                 {
-                    session[index].bestFive = session[index - 1].bestFive;
+                    session.getLastSolve().bestFive = session[session.Count - 2].bestFive;
 
                     if (Math.Round(sumOf5 / 3, 2) < 60)
-                        labelB5.Text = "Best average of 5: " + session[index].bestFive.ToString();
+                        labelB5.Text = "Best average of 5: " + session.getLastSolve().bestFive.ToString();
                     else
-                        labelB5.Text = "Best average of 5: " + secondsToMinutes((float)session[index].bestFive);
+                        labelB5.Text = "Best average of 5: " + secondsToMinutes((float)session.getLastSolve().bestFive);
                 }
             }
             else
@@ -593,9 +509,9 @@ namespace Timer
                     n++;
                     if (n != 0 && n != 11)
                         if (solve.penalty == "DNF")
-                            sumOf12 += WorstTime;
+                            sumOf12 += session.WorstTime;
                         else
-                            sumOf12 += solve.time;
+                            sumOf12 += solve.Time;
                 }
                 if (Math.Round(sumOf12 / 10, 2) < 60)
                     label12.Text = "Average of 12 (10): " + Math.Round(sumOf12 / 10, 2).ToString();
@@ -608,9 +524,9 @@ namespace Timer
             //------------------------------------------------------------------Calculates and displays best average of 12
             if (session.Count >= 12)
             {
-                if (Math.Round(sumOf12 / 10, 2) < session[index - 1].bestTwelve)
+                if (Math.Round(sumOf12 / 10, 2) < session[session.Count - 2].bestTwelve)
                 {
-                    session[index].bestTwelve = (float)Math.Round(sumOf12 / 10, 2);
+                    session.getLastSolve().bestTwelve = (float)Math.Round(sumOf12 / 10, 2);
 
                     if (Math.Round(sumOf12 / 10, 2) < 60)
                         labelB12.Text = "Best average of 12: " + Math.Round(sumOf12 / 10, 2).ToString();
@@ -619,12 +535,12 @@ namespace Timer
                 }
                 else
                 {
-                    session[index].bestTwelve = session[index - 1].bestTwelve;
+                    session.getLastSolve().bestTwelve = session[session.Count - 2].bestTwelve;
 
                     if (Math.Round(sumOf12 / 10, 2) < 60)
-                        labelB12.Text = "Best average of 12: " + session[index].bestTwelve.ToString();
+                        labelB12.Text = "Best average of 12: " + session.getLastSolve().bestTwelve.ToString();
                     else
-                        labelB12.Text = "Best average of 12: " + secondsToMinutes(session[index].bestTwelve);
+                        labelB12.Text = "Best average of 12: " + secondsToMinutes(session.getLastSolve().bestTwelve);
                 }
             }
             else
@@ -644,9 +560,9 @@ namespace Timer
                     n++;
                     if (n != 0 || n != 99)
                         if (solve.penalty == "DNF")
-                            sumOf100 += WorstTime;
+                            sumOf100 += session.WorstTime;
                         else
-                            sumOf100 += solve.time;
+                            sumOf100 += solve.Time;
                 }
                 if (Math.Round(sumOf100 / 98, 2) < 60)
                     label100.Text = "Average of 100 (98): " + Math.Round(sumOf100 / 98, 2).ToString();
@@ -658,15 +574,15 @@ namespace Timer
             // -----------------------------------------------------------------Displays best and worst times
             if (session.Count > 0 && numberOfDNFs != session.Count)
             {
-                if (BestTime < 60)
-                    labelBest.Text = "Best time: " + BestTime;
+                if (session.BestTime < 60)
+                    labelBest.Text = "Best time: " + session.BestTime;
                 else
-                    labelBest.Text = "Best time: " + secondsToMinutes(BestTime);
+                    labelBest.Text = "Best time: " + secondsToMinutes(session.BestTime);
 
-                if (WorstTime < 60)
-                    labelWorst.Text = "Worst time: " + WorstTime;
+                if (session.WorstTime < 60)
+                    labelWorst.Text = "Worst time: " + session.WorstTime;
                 else
-                    labelWorst.Text = "Worst time: " + secondsToMinutes(WorstTime);
+                    labelWorst.Text = "Worst time: " + secondsToMinutes(session.WorstTime);
             }
             else
             {
@@ -696,7 +612,7 @@ namespace Timer
 
         private void copyLastScrambleToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Clipboard.SetText(session[index].scramble);
+            Clipboard.SetText(session.getLastSolve().scramble);
         }
 
         private void copySessionAvgToolStripMenuItem_Click(object sender, EventArgs e)
@@ -811,7 +727,7 @@ namespace Timer
         private Solve[] bubbleSortSolve(Solve[] array)
         {
             Solve tmp = new Solve();    //temporary Sovle object
-            tmp.time = 0;
+            tmp.Time = 0;
 
             bool madeChange = true;
 
@@ -820,7 +736,7 @@ namespace Timer
                 madeChange = false;
                 for (int i = 0; i < array.Length - 1; i++)  //go through each element in the array
                 {
-                    if (array[i].time > array[i + 1].time)  //move if necessary
+                    if (array[i].Time > array[i + 1].Time)  //move if necessary
                     {
                         tmp = array[i];
                         array[i] = array[i + 1];
